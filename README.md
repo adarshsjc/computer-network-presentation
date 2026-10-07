@@ -13,6 +13,6 @@ A standalone, browser-based visual simulator for learning how Address Resolution
 
 ## Run
 
-Open `arp_visual_simulator.html` in a modern web browser. No build step or dependencies are required.
+Open `index.html` in a modern web browser or visit the project root on Vercel. The root page redirects to `arp_visual_simulator.html`. No build step or dependencies are required.
 
 Select a target host and choose **Send ARP** to watch the request, response, and cache update. Use **Reset** to restart the mission and clear the cache.
