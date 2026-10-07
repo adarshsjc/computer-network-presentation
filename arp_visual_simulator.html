@@ -273,9 +273,13 @@
       border: 1px solid #60a5fa;
       border-radius: 4px;
       padding: 4px 6px;
-      font-size: 8px;
+      width: 176px;
+      box-sizing: border-box;
+      font-size: 10px;
+      line-height: 1.25;
       font-weight: bold;
-      white-space: nowrap;
+      white-space: pre-line;
+      text-align: center;
       z-index: 50;
       pointer-events: none;
       transform: translate(-50%, -50%);
@@ -465,7 +469,7 @@
       document.getElementById('visual-packets').innerHTML = '';
 
       const packetContainer = document.getElementById('visual-packets');
-      const requestPacket = createFrame('req', `ARP REQ: Who has ${targetNode.ip}?`, hosts[0].x, hosts[0].y);
+      const requestPacket = createFrame('req', `ARP REQUEST:\nWho has ${targetNode.ip}?`, hosts[0].x, hosts[0].y);
       packetContainer.appendChild(requestPacket);
       highlightWire(1, true);
 
@@ -478,7 +482,7 @@
 
         hosts.forEach(host => {
           if (host.id === 1) return;
-          const broadcastFrame = createFrame('req', `Who is ${targetNode.ip}?`, switchPos.x, switchPos.y);
+          const broadcastFrame = createFrame('req', `ARP REQUEST:\nWho is ${targetNode.ip}?`, switchPos.x, switchPos.y);
           packetContainer.appendChild(broadcastFrame);
 
           schedule(() => moveFrame(broadcastFrame, host.x, host.y), 50);
@@ -489,7 +493,7 @@
             if (host.id === targetId) {
               document.getElementById(`host-${host.id}`).classList.add('responder-glow');
               schedule(() => {
-                const replyFrame = createFrame('reply', `ARP REPLY: ${host.ip} is ${host.mac}`, host.x, host.y);
+                const replyFrame = createFrame('reply', `ARP REPLY:\n${host.ip}\nis ${host.mac}`, host.x, host.y);
                 packetContainer.appendChild(replyFrame);
                 highlightWire(host.id, true);
 
