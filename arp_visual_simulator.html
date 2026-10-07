@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARP Interactive Game Simulation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #e8eef5;
+      --surface: #ffffff;
+      --surface-soft: #f4f7fb;
+      --surface-strong: #e9eff6;
+      --border: #cbd5e1;
+      --text: #172033;
+      --muted: #64748b;
+      --blue: #2563eb;
+    }
+
+    body {
+      background-color: var(--page);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+    }
+
+    .mobile-app {
+      width: 100%;
+      max-width: 410px;
+      height: 92vh;
+      max-height: 840px;
+      background: var(--surface);
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 50px -12px rgba(30, 41, 59, 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      position: relative;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .mobile-app::-webkit-scrollbar { display: none; }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-strong);
+      padding: 10px 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    .btn-reset {
+      flex: 0 0 auto;
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-reset:hover { background: #dc2626; }
+
+    .game-banner {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 12px;
+      border: 1px solid #c7d2fe;
+      line-height: 1.5;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      z-index: 10;
+    }
+
+    select {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 12px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .btn-send {
+      flex: 0 0 auto;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-send:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-send:disabled { background: #475569; cursor: not-allowed; }
+
+    .network-container {
+      position: relative;
+      width: 100%;
+      height: 310px;
+      flex: 0 0 310px;
+      background: var(--surface-soft);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .connections-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .network-wire {
+      stroke: #94a3b8;
+      stroke-width: 3;
+      stroke-dasharray: 4 4;
+      animation: wire-pulse 20s linear infinite;
+    }
+    @keyframes wire-pulse { to { stroke-dashoffset: -40; } }
+    .network-wire.active { stroke: #3b82f6; stroke-width: 4; }
+
+    .node {
+      position: absolute;
+      width: 90px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 2px;
+      text-align: center;
+      font-size: 10px;
+      transition: all 0.4s ease;
+      box-sizing: border-box;
+      z-index: 5;
+    }
+
+    .node .icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    #host-1 { left: 10px; top: 10px; }
+    #host-2 { left: 140px; top: 10px; }
+    #host-3 { left: 270px; top: 10px; }
+    #host-4 { left: 10px; top: 225px; }
+    #host-5 { left: 140px; top: 225px; }
+    #host-6 { left: 270px; top: 225px; }
+
+    .switch-node {
+      position: absolute;
+      left: 75px;
+      top: 103px;
+      width: 220px;
+      height: 68px;
+      background: #3347c5;
+      border: 1px solid #2639a9;
+      clip-path: polygon(7% 0, 93% 0, 100% 45%, 100% 100%, 0 100%, 0 45%);
+      z-index: 5;
+    }
+
+    .switch-face {
+      position: absolute;
+      inset: 17px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      background: #3549c4;
+      border-top: 2px solid #23369f;
+    }
+
+    .switch-ports {
+      height: 26px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 3px;
+      padding: 3px;
+      background: #dbeafe;
+      border: 2px solid #1e2d78;
+      border-radius: 3px;
+    }
+
+    .switch-port {
+      position: relative;
+      background: #121a36;
+      border: 1px solid #8795c7;
+      border-radius: 2px;
+    }
+
+    .switch-port::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 3px;
+      width: 3px;
+      height: 3px;
+      transform: translateX(-50%);
+      background: #64748b;
+      border-radius: 50%;
+    }
+
+    .switch-lights {
+      position: absolute;
+      left: 10px;
+      right: 36px;
+      bottom: 4px;
+      display: flex;
+      justify-content: space-around;
+      pointer-events: none;
+    }
+
+    .switch-light {
+      width: 5px;
+      height: 5px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 5px #4ade80;
+      animation: switch-blink 1.2s steps(2, start) infinite;
+    }
+
+    .switch-light:nth-child(2n) { animation-delay: 0.35s; }
+    .switch-light:nth-child(3n) { animation-delay: 0.7s; }
+
+    @keyframes switch-blink {
+      50% { opacity: 0.25; box-shadow: 0 0 1px #4ade80; }
+    }
+
+    .switch-power {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      border: 4px solid #dbeafe;
+      border-radius: 50%;
+      background: #172554;
+      box-shadow: inset 0 0 0 2px #94a3b8;
+    }
+
+    .node.sender {
+      border-color: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+    .node.responder-glow {
+      border-color: #22c55e;
+      box-shadow: 0 0 18px #22c55e;
+      background: #dcfce7 !important;
+      color: #14532d;
+      transform: scale(1.06);
+    }
+    .node.ignored { opacity: 0.45; }
+
+    .arp-frame {
+      position: absolute;
+      background: #2563eb;
+      color: white;
+      border: 1px solid #60a5fa;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 8px;
+      font-weight: bold;
+      white-space: nowrap;
+      z-index: 50;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: top 1.8s cubic-bezier(0.25, 1, 0.5, 1), left 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .arp-frame.reply { background: #16a34a; border-color: #4ade80; }
+
+    .cache-section {
+      background: var(--surface-soft);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 11px;
+    }
+
+    .cache-title {
+      font-weight: bold;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .cache-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .cache-table th, .cache-table td {
+      border: 1px solid var(--border);
+      padding: 6px;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+    .cache-table th { background: var(--surface-strong); color: #475569; font-size: 9px; }
+
+    .flash-new { animation: row-flash 1s ease-out; }
+    @keyframes row-flash {
+      0% { background-color: rgba(34, 197, 94, 0.3); }
+      100% { background-color: transparent; }
+    }
+
+    @media (max-width: 390px) {
+      .mobile-app { padding: 12px; }
+      .network-container { transform-origin: top left; }
+      .node, .switch-node { transform-origin: center; }
+      .node.responder-glow { transform: scale(1.03); }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-app">
+    <div class="top-header">
+      <div><b>ARP Mission Game</b></div>
+      <div>Score: <span id="game-score" style="color:#22c55e; font-weight:bold;">0</span></div>
+      <button class="btn-reset" type="button" onclick="resetAll()">Reset</button>
+    </div>
+
+    <div class="game-banner" id="game-task">
+      <b>Challenge 1:</b> Select <b>Host 4</b> (192.168.1.40) &amp; click <b>Send ARP</b> to identify its physical MAC card!
+    </div>
+
+    <div class="control-row">
+      <select id="receiver-select" aria-label="Select receiver host">
+        <option value="2">Target: Host 2 (192.168.1.20)</option>
+        <option value="3">Target: Host 3 (192.168.1.30)</option>
+        <option value="4" selected>Target: Host 4 (192.168.1.40)</option>
+        <option value="5">Target: Host 5 (192.168.1.50)</option>
+        <option value="6">Target: Host 6 (192.168.1.60)</option>
+      </select>
+      <button class="btn-send" id="btn-send" type="button" onclick="startSimulation()">Send ARP</button>
+    </div>
+
+    <div class="network-container">
+      <svg class="connections-svg" aria-hidden="true">
+        <line id="wire-1" class="network-wire" x1="55" y1="35" x2="185" y2="137" />
+        <line id="wire-2" class="network-wire" x1="185" y1="35" x2="185" y2="137" />
+        <line id="wire-3" class="network-wire" x1="315" y1="35" x2="185" y2="137" />
+        <line id="wire-4" class="network-wire" x1="55" y1="250" x2="185" y2="137" />
+        <line id="wire-5" class="network-wire" x1="185" y1="250" x2="185" y2="137" />
+        <line id="wire-6" class="network-wire" x1="315" y1="250" x2="185" y2="137" />
+      </svg>
+
+      <div class="node sender" id="host-1">
+        <b>Host 1 (You)</b><br>
+        <span style="color:#60a5fa; font-weight:600;">192.168.1.10</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:01</span>
+      </div>
+      <div class="node" id="host-2">
+        <b>Host 2</b><br>
+        <span style="color:#64748b;">192.168.1.20</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:02</span>
+      </div>
+      <div class="node" id="host-3">
+        <b>Host 3</b><br>
+        <span style="color:#64748b;">192.168.1.30</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:03</span>
+      </div>
+
+      <div class="switch-node" aria-label="Network switch">
+        <div class="switch-face">
+          <div class="switch-ports" aria-hidden="true">
+            <span class="switch-port"></span><span class="switch-port"></span>
+            <span class="switch-port"></span><span class="switch-port"></span>
+            <span class="switch-port"></span><span class="switch-port"></span>
+            <span class="switch-port"></span><span class="switch-port"></span>
+          </div>
+          <span class="switch-power" aria-hidden="true"></span>
+          <div class="switch-lights" aria-hidden="true">
+            <i class="switch-light"></i><i class="switch-light"></i>
+            <i class="switch-light"></i><i class="switch-light"></i>
+            <i class="switch-light"></i><i class="switch-light"></i>
+            <i class="switch-light"></i><i class="switch-light"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="node" id="host-4">
+        <b>Host 4</b><br>
+        <span style="color:#64748b;">192.168.1.40</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:04</span>
+      </div>
+      <div class="node" id="host-5">
+        <b>Host 5</b><br>
+        <span style="color:#64748b;">192.168.1.50</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:05</span>
+      </div>
+      <div class="node" id="host-6">
+        <b>Host 6</b><br>
+        <span style="color:#64748b;">192.168.1.60</span><br>
+        <span style="color:#64748b; font-size:8px;">00:11:AA:BB:06</span>
+      </div>
+
+      <div id="visual-packets" aria-hidden="true"></div>
+    </div>
+
+    <div class="cache-section">
+      <div class="cache-title">
+        <span>Host 1 Local ARP Cache</span>
+        <span style="font-size:9px; color:#475569;">Saves learned MAC hardware</span>
+      </div>
+      <table class="cache-table">
+        <thead>
+          <tr><th>IP ADDRESS</th><th>MAC (HARDWARE CARD)</th><th>MAPPED VIA</th></tr>
+        </thead>
+        <tbody id="cache-rows">
+          <tr><td colspan="3" style="text-align:center; color:#475569; padding:12px;">Cache Empty (Ask on network first)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const hosts = [
+      { id: 1, name: 'Host 1 (You)', ip: '192.168.1.10', mac: '00:11:AA:BB:01', x: 55, y: 35 },
+      { id: 2, name: 'Host 2', ip: '192.168.1.20', mac: '00:11:AA:BB:02', x: 185, y: 35 },
+      { id: 3, name: 'Host 3', ip: '192.168.1.30', mac: '00:11:AA:BB:03', x: 315, y: 35 },
+      { id: 4, name: 'Host 4', ip: '192.168.1.40', mac: '00:11:AA:BB:04', x: 55, y: 250 },
+      { id: 5, name: 'Host 5', ip: '192.168.1.50', mac: '00:11:AA:BB:05', x: 185, y: 250 },
+      { id: 6, name: 'Host 6', ip: '192.168.1.60', mac: '00:11:AA:BB:06', x: 315, y: 250 }
+    ];
+
+    let cachedHosts = [];
+    let gameScore = 0;
+    let isRunning = false;
+    let pendingTimers = new Set();
+    const switchPos = { x: 185, y: 137 };
+
+    function schedule(callback, delay) {
+      const timerId = setTimeout(() => {
+        pendingTimers.delete(timerId);
+        if (!isRunning) return;
+        callback();
+      }, delay);
+      pendingTimers.add(timerId);
+      return timerId;
+    }
+
+    function startSimulation() {
+      if (isRunning) return;
+      isRunning = true;
+      document.getElementById('btn-send').disabled = true;
+
+      const targetId = Number.parseInt(document.getElementById('receiver-select').value, 10);
+      const targetNode = hosts.find(host => host.id === targetId);
+      if (!targetNode) {
+        isRunning = false;
+        document.getElementById('btn-send').disabled = false;
+        return;
+      }
+
+      hosts.forEach(host => {
+        const element = document.getElementById(`host-${host.id}`);
+        if (host.id !== 1) element.className = 'node';
+      });
+      document.getElementById('visual-packets').innerHTML = '';
+
+      const packetContainer = document.getElementById('visual-packets');
+      const requestPacket = createFrame('req', `ARP REQ: Who has ${targetNode.ip}?`, hosts[0].x, hosts[0].y);
+      packetContainer.appendChild(requestPacket);
+      highlightWire(1, true);
+
+      schedule(() => moveFrame(requestPacket, switchPos.x, switchPos.y), 100);
+
+      schedule(() => {
+        requestPacket.remove();
+        highlightWire(1, false);
+        for (let wireId = 2; wireId <= 6; wireId++) highlightWire(wireId, true);
+
+        hosts.forEach(host => {
+          if (host.id === 1) return;
+          const broadcastFrame = createFrame('req', `Who is ${targetNode.ip}?`, switchPos.x, switchPos.y);
+          packetContainer.appendChild(broadcastFrame);
+
+          schedule(() => moveFrame(broadcastFrame, host.x, host.y), 50);
+          schedule(() => {
+            broadcastFrame.remove();
+            highlightWire(host.id, false);
+
+            if (host.id === targetId) {
+              document.getElementById(`host-${host.id}`).classList.add('responder-glow');
+              schedule(() => {
+                const replyFrame = createFrame('reply', `ARP REPLY: ${host.ip} is ${host.mac}`, host.x, host.y);
+                packetContainer.appendChild(replyFrame);
+                highlightWire(host.id, true);
+
+                schedule(() => moveFrame(replyFrame, switchPos.x, switchPos.y), 100);
+                schedule(() => {
+                  highlightWire(host.id, false);
+                  highlightWire(1, true);
+                  moveFrame(replyFrame, hosts[0].x, hosts[0].y);
+                }, 2000);
+                schedule(() => {
+                  replyFrame.remove();
+                  highlightWire(1, false);
+                  saveToArpCache(targetNode);
+                  checkGameProgress(targetId);
+                  isRunning = false;
+                  document.getElementById('btn-send').disabled = false;
+                  pendingTimers.clear();
+                }, 4000);
+              }, 1200);
+            } else {
+              document.getElementById(`host-${host.id}`).classList.add('ignored');
+            }
+          }, 2000);
+        });
+      }, 2000);
+    }
+
+    function createFrame(type, text, x, y) {
+      const element = document.createElement('div');
+      element.className = `arp-frame ${type === 'reply' ? 'reply' : ''}`;
+      element.innerText = text;
+      element.style.left = `${x}px`;
+      element.style.top = `${y}px`;
+      return element;
+    }
+
+    function moveFrame(element, targetX, targetY) {
+      element.style.left = `${targetX}px`;
+      element.style.top = `${targetY}px`;
+    }
+
+    function highlightWire(nodeId, isActive) {
+      const line = document.getElementById(`wire-${nodeId}`);
+      if (!line) return;
+      if (isActive) {
+        line.classList.add('active');
+        line.style.stroke = nodeId === 1 ? '#3b82f6' : '#f59e0b';
+      } else {
+        line.classList.remove('active');
+        line.style.stroke = '';
+      }
+    }
+
+    function saveToArpCache(host) {
+      if (!cachedHosts.some(cachedHost => cachedHost.id === host.id)) {
+        cachedHosts.push(host);
+        renderArpCacheTable(host.id);
+      }
+    }
+
+    function renderArpCacheTable(newHostId) {
+      const tbody = document.getElementById('cache-rows');
+      if (cachedHosts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#475569; padding:12px;">Cache Empty (Ask on network first)</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = cachedHosts.map(host => `
+        <tr class="${host.id === newHostId ? 'flash-new' : ''}">
+          <td style="color:#60a5fa; font-weight:600;">${host.ip}</td>
+          <td style="color:#34d399; font-family:monospace;">${host.mac}</td>
+          <td style="color:#fbbf24; font-size:10px;">Dynamic (ARP)</td>
+        </tr>
+      `).join('');
+    }
+
+    function checkGameProgress(targetId) {
+      if (targetId === 4 && gameScore === 0) {
+        gameScore += 100;
+        document.getElementById('game-score').innerText = String(gameScore);
+        document.getElementById('game-task').innerHTML = '<b>Mission 1 Complete!</b> Now select <b>Host 5</b> (192.168.1.50) to build a larger cache database!';
+      } else if (targetId === 5 && gameScore === 100) {
+        gameScore += 100;
+        document.getElementById('game-score').innerText = String(gameScore);
+        document.getElementById('game-task').innerHTML = '<b>Mission 2 Complete!</b> Save every machine to cache to build a complete local ARP table!';
+      } else {
+        gameScore += 50;
+        document.getElementById('game-score').innerText = String(gameScore);
+      }
+    }
+
+    function resetAll() {
+      pendingTimers.forEach(clearTimeout);
+      pendingTimers.clear();
+      cachedHosts = [];
+      gameScore = 0;
+      isRunning = false;
+      document.getElementById('game-score').innerText = '0';
+      document.getElementById('btn-send').disabled = false;
+      document.getElementById('receiver-select').value = '4';
+      document.getElementById('game-task').innerHTML = '<b>Challenge 1:</b> Select <b>Host 4</b> (192.168.1.40) &amp; click <b>Send ARP</b> to identify its physical MAC card!';
+      document.getElementById('visual-packets').innerHTML = '';
+
+      hosts.forEach(host => {
+        const element = document.getElementById(`host-${host.id}`);
+        element.className = host.id === 1 ? 'node sender' : 'node';
+        highlightWire(host.id, false);
+      });
+
+      renderArpCacheTable();
+    }
+  </script>
+</body>
+</html>
