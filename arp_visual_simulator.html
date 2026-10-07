@@ -73,18 +73,6 @@
     }
     .btn-reset:hover { background: #dc2626; }
 
-    .game-banner {
-      background: #eef2ff;
-      color: #3730a3;
-      padding: 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      text-align: center;
-      margin-bottom: 12px;
-      border: 1px solid #c7d2fe;
-      line-height: 1.5;
-    }
-
     .control-row {
       display: flex;
       gap: 8px;
@@ -337,13 +325,8 @@
 <body>
   <div class="mobile-app">
     <div class="top-header">
-      <div><b>ARP Mission Game</b></div>
-      <div>Score: <span id="game-score" style="color:#22c55e; font-weight:bold;">0</span></div>
+      <div><b>ARP</b></div>
       <button class="btn-reset" type="button" onclick="resetAll()">Reset</button>
-    </div>
-
-    <div class="game-banner" id="game-task">
-      <b>Challenge 1:</b> Select <b>Host 4</b> (192.168.1.40) &amp; click <b>Send ARP</b> to identify its physical MAC card!
     </div>
 
     <div class="control-row">
@@ -447,7 +430,6 @@
     ];
 
     let cachedHosts = [];
-    let gameScore = 0;
     let isRunning = false;
     let pendingTimers = new Set();
     const switchPos = { x: 185, y: 137 };
@@ -520,7 +502,6 @@
                   replyFrame.remove();
                   highlightWire(1, false);
                   saveToArpCache(targetNode);
-                  checkGameProgress(targetId);
                   isRunning = false;
                   document.getElementById('btn-send').disabled = false;
                   pendingTimers.clear();
@@ -583,31 +564,13 @@
       `).join('');
     }
 
-    function checkGameProgress(targetId) {
-      if (targetId === 4 && gameScore === 0) {
-        gameScore += 100;
-        document.getElementById('game-score').innerText = String(gameScore);
-        document.getElementById('game-task').innerHTML = '<b>Mission 1 Complete!</b> Now select <b>Host 5</b> (192.168.1.50) to build a larger cache database!';
-      } else if (targetId === 5 && gameScore === 100) {
-        gameScore += 100;
-        document.getElementById('game-score').innerText = String(gameScore);
-        document.getElementById('game-task').innerHTML = '<b>Mission 2 Complete!</b> Save every machine to cache to build a complete local ARP table!';
-      } else {
-        gameScore += 50;
-        document.getElementById('game-score').innerText = String(gameScore);
-      }
-    }
-
     function resetAll() {
       pendingTimers.forEach(clearTimeout);
       pendingTimers.clear();
       cachedHosts = [];
-      gameScore = 0;
       isRunning = false;
-      document.getElementById('game-score').innerText = '0';
       document.getElementById('btn-send').disabled = false;
       document.getElementById('receiver-select').value = '4';
-      document.getElementById('game-task').innerHTML = '<b>Challenge 1:</b> Select <b>Host 4</b> (192.168.1.40) &amp; click <b>Send ARP</b> to identify its physical MAC card!';
       document.getElementById('visual-packets').innerHTML = '';
 
       hosts.forEach(host => {
