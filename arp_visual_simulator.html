@@ -318,6 +318,32 @@
       100% { background-color: transparent; }
     }
 
+    .arp-explainer {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .arp-explainer h2 {
+      margin: 0 0 6px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .arp-explainer p { margin: 0; }
+    .arp-explainer .arp-example { margin-top: 8px; color: #475569; }
+    .arp-explainer .arp-takeaway {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
     @media (max-width: 390px) {
       .mobile-app { padding: 12px; }
       .network-container { transform-origin: top left; }
@@ -422,6 +448,13 @@
         </tbody>
       </table>
     </div>
+
+    <section class="arp-explainer" aria-labelledby="arp-explainer-title">
+      <h2 id="arp-explainer-title">How ARP Works</h2>
+      <p>ARP finds a device's MAC address when its IP address is known, so data can be delivered across the local network.</p>
+      <p class="arp-example"><strong>Example:</strong> Host 1 knows Host 2 is at <strong>192.168.1.20</strong>, but not its MAC. It broadcasts, “Who has 192.168.1.20?” Host 2 replies with <strong>00:11:AA:BB:02</strong>, and Host 1 saves that mapping in its ARP cache.</p>
+      <p class="arp-takeaway">In short: ARP maps an IP address to a MAC address.</p>
+    </section>
   </div>
 
   <script>
@@ -469,7 +502,7 @@
       document.getElementById('visual-packets').innerHTML = '';
 
       const packetContainer = document.getElementById('visual-packets');
-      const requestPacket = createFrame('req', `ARP REQUEST:\nWho has ${targetNode.ip}?\nMAC: OOOOO`, hosts[0].x, hosts[0].y);
+      const requestPacket = createFrame('req', `ARP REQUEST:\nWho has ${targetNode.ip}?`, hosts[0].x, hosts[0].y);
       packetContainer.appendChild(requestPacket);
       highlightWire(1, true);
 
@@ -482,7 +515,7 @@
 
         hosts.forEach(host => {
           if (host.id === 1) return;
-          const broadcastFrame = createFrame('req', `ARP REQUEST:\nWho is ${targetNode.ip}?\nMAC: OOOOO`, switchPos.x, switchPos.y);
+          const broadcastFrame = createFrame('req', `ARP REQUEST:\nWho is ${targetNode.ip}?`, switchPos.x, switchPos.y);
           packetContainer.appendChild(broadcastFrame);
 
           schedule(() => moveFrame(broadcastFrame, host.x, host.y), 50);
