@@ -450,10 +450,10 @@
     </div>
 
     <section class="arp-explainer" aria-labelledby="arp-explainer-title">
-      <h2 id="arp-explainer-title">How ARP Works</h2>
-      <p>ARP finds a device's MAC address when its IP address is known, so data can be delivered across the local network.</p>
-      <p class="arp-example"><strong>Example:</strong> Host 1 knows Host 2 is at <strong>192.168.1.20</strong>, but not its MAC. It broadcasts, “Who has 192.168.1.20?” Host 2 replies with <strong>00:11:AA:BB:02</strong>, and Host 1 saves that mapping in its ARP cache.</p>
-      <p class="arp-takeaway">In short: ARP maps an IP address to a MAC address.</p>
+      <h2 id="arp-explainer-title">Address Resolution Protocol (ARP)</h2>
+      <p>ARP (Address Resolution Protocol) is used to find the <strong>MAC address of a device when its IP address is already known</strong> on a local network. A computer needs the MAC address to deliver data to another device on the same network.</p>
+      <p class="arp-example"><strong>Example:</strong> Suppose Computer A wants to send data to Computer B. Computer A knows B's IP address is <strong>192.168.1.20</strong>, but it doesn't know B's MAC address. It sends an ARP request: <strong>“Who has 192.168.1.20?”</strong> Computer B replies with its MAC address, such as <strong>AA:BB:CC:DD:EE</strong>. Computer A then uses this MAC address to send the data.</p>
+      <p class="arp-takeaway"><strong>In simple words:</strong> ARP connects an <strong>IP address → MAC address</strong> so devices can communicate on a local network.</p>
     </section>
   </div>
 
